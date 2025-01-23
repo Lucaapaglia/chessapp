@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/Lucaapaglia/chessapp/static/css/main.e6c13ad2.css",
+    "main.js": "/Lucaapaglia/chessapp/static/js/main.901bd8c7.js",
+    "static/js/488.a1546105.chunk.js": "/Lucaapaglia/chessapp/static/js/488.a1546105.chunk.js",
+    "index.html": "/Lucaapaglia/chessapp/index.html",
+    "main.e6c13ad2.css.map": "/Lucaapaglia/chessapp/static/css/main.e6c13ad2.css.map",
+    "main.901bd8c7.js.map": "/Lucaapaglia/chessapp/static/js/main.901bd8c7.js.map",
+    "488.a1546105.chunk.js.map": "/Lucaapaglia/chessapp/static/js/488.a1546105.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.901bd8c7.js"
+  ]
+}
