@@ -314,3 +314,235 @@
     grid-template-columns: 1fr 1fr;
   }
 }
+
+
+.board-stage {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  gap: 10px;
+  max-width: 100%;
+}
+
+.evaluation-bar {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 30px;
+  min-width: 30px;
+  overflow: hidden;
+  border: 1px solid #334155;
+  border-radius: 9px;
+  background: #111827;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+}
+
+.evaluation-bar__segment {
+  width: 100%;
+  transition: height 260ms ease;
+}
+
+.evaluation-bar__white {
+  background: #f8fafc;
+}
+
+.evaluation-bar__black {
+  background: #111827;
+}
+
+.evaluation-bar__label {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  transform: translate(-50%, -50%) rotate(-90deg);
+  padding: 3px 6px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.8);
+  color: #f8fafc;
+  font-size: 0.72rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  backdrop-filter: blur(5px);
+}
+
+.tools-panel {
+  margin-top: 18px;
+}
+
+.fen-form {
+  display: grid;
+  gap: 10px;
+}
+
+.fen-form label {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.fen-form textarea {
+  width: 100%;
+  resize: vertical;
+  min-height: 82px;
+  padding: 12px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  outline: none;
+  background: #09111f;
+  color: #e2e8f0;
+  font-family:
+    "SFMono-Regular",
+    Consolas,
+    "Liberation Mono",
+    monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.fen-form textarea:focus {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.14);
+}
+
+.tool-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.tool-actions button,
+.promotion-cancel {
+  min-height: 42px;
+  border: 1px solid #334155;
+  border-radius: 9px;
+  background: #172033;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-weight: 800;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.tool-actions button:hover,
+.promotion-cancel:hover {
+  transform: translateY(-1px);
+  border-color: #60a5fa;
+  background: #1e2b40;
+}
+
+.tool-actions button:focus-visible,
+.promotion-cancel:focus-visible,
+.promotion-options button:focus-visible {
+  outline: 3px solid rgba(96, 165, 250, 0.38);
+  outline-offset: 2px;
+}
+
+.tool-message {
+  min-height: 20px;
+  margin: 12px 0 0;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 6, 23, 0.72);
+  backdrop-filter: blur(7px);
+}
+
+.promotion-dialog {
+  width: min(460px, 100%);
+  padding: 24px;
+  border: 1px solid #334155;
+  border-radius: 18px;
+  background: #0f172a;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+}
+
+.promotion-dialog h2 {
+  margin: 0;
+  color: #f8fafc;
+}
+
+.promotion-copy {
+  margin: 8px 0 18px;
+  color: #94a3b8;
+}
+
+.promotion-options {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.promotion-options button {
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  min-height: 100px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #111b2d;
+  color: #f8fafc;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.promotion-options button:hover {
+  transform: translateY(-2px);
+  border-color: #60a5fa;
+  background: #18253a;
+}
+
+.promotion-options button span {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+.promotion-options button small {
+  color: #94a3b8;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.promotion-cancel {
+  width: 100%;
+  margin-top: 14px;
+}
+
+@media (max-width: 680px) {
+  .evaluation-bar {
+    width: 24px;
+    min-width: 24px;
+  }
+
+  .board-stage {
+    gap: 7px;
+  }
+
+  .tool-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .promotion-options {
+    grid-template-columns: 1fr 1fr;
+  }
+}
