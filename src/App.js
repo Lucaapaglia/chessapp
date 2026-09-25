@@ -117,7 +117,7 @@ function initialBoardWidth() {
     return 520;
   }
 
-  return Math.max(280, Math.min(560, window.innerWidth - 72));
+  return Math.max(220, Math.min(560, window.innerWidth - 90));
 }
 
 function requiresPromotion(game, sourceSquare, targetSquare) {
