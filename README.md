@@ -8,9 +8,13 @@ A browser-based chess analysis application built with React, Chess.js, react-che
 - Stockfish analysis after each position change
 - non-blocking engine execution in a Web Worker
 - evaluation normalized from White's perspective
-- engine depth, best move, and principal variation
+- visual evaluation bar
+- engine depth, best move, principal variation, and best-move arrow
 - SAN move history
 - New Game, Undo, Redo, and Flip Board controls
+- promotion selector for queen, rook, bishop, or knight
+- load and copy FEN
+- copy PGN
 - check, checkmate, stalemate, and draw status
 - responsive analysis-board layout
 
@@ -51,13 +55,18 @@ npm test -- --watchAll=false
 
 ## Roadmap
 
-Phase 1 establishes reliable engine communication and core game controls.
+Phase 1 established reliable engine communication and core game controls.
 
-Planned next:
+Phase 2 adds analysis and position tooling:
 - evaluation bar
 - best-move arrow
 - promotion picker
-- FEN / PGN import and export
+- FEN loading / copying
+- PGN copying
+
+Planned next:
 - clickable move navigation
+- keyboard navigation through game history
 - stronger test coverage
-- deployment and final portfolio documentation
+- deployment
+- final screenshots and portfolio documentation

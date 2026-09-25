@@ -4,8 +4,11 @@ import { Chessboard } from "react-chessboard";
 
 import "./App.css";
 import AnalysisPanel from "./components/AnalysisPanel";
+import EvaluationBar from "./components/EvaluationBar";
 import GameControls from "./components/GameControls";
 import MoveHistory from "./components/MoveHistory";
+import PositionTools from "./components/PositionTools";
+import PromotionDialog from "./components/PromotionDialog";
 import { useStockfish } from "./hooks/useStockfish";
 
 const STARTING_FEN = new Chess().fen();
@@ -114,7 +117,22 @@ function initialBoardWidth() {
     return 520;
   }
 
-  return Math.max(280, Math.min(560, window.innerWidth - 40));
+  return Math.max(220, Math.min(560, window.innerWidth - 90));
+}
+
+function requiresPromotion(game, sourceSquare, targetSquare) {
+  const piece = game.get(sourceSquare);
+
+  if (!piece || piece.type !== "p") {
+    return false;
+  }
+
+  const targetRank = targetSquare?.[1];
+
+  return (
+    (piece.color === "w" && targetRank === "8") ||
+    (piece.color === "b" && targetRank === "1")
+  );
 }
 
 function App() {
@@ -123,6 +141,7 @@ function App() {
   const [redoStack, setRedoStack] = useState([]);
   const [orientation, setOrientation] = useState("white");
   const [boardWidth, setBoardWidth] = useState(initialBoardWidth);
+  const [pendingPromotion, setPendingPromotion] = useState(null);
 
   const game = useMemo(
     () => buildGame(baseFen, moves),
@@ -131,6 +150,7 @@ function App() {
 
   const fen = game.fen();
   const history = game.history();
+  const pgn = game.pgn();
 
   const { analysis, status, analyze } = useStockfish({
     depth: 16,
@@ -159,28 +179,67 @@ function App() {
     [analysis.pv, fen]
   );
 
+  const bestMoveArrow = useMemo(() => {
+    const move = uciToMove(analysis.bestMove);
+
+    if (!move) {
+      return [];
+    }
+
+    return [[move.from, move.to, "rgba(96, 165, 250, 0.9)"]];
+  }, [analysis.bestMove]);
+
+  const lastMoveStyles = useMemo(() => {
+    const lastMove = moves[moves.length - 1];
+
+    if (!lastMove) {
+      return {};
+    }
+
+    return {
+      [lastMove.from]: {
+        boxShadow: "inset 0 0 0 9999px rgba(250, 204, 21, 0.18)",
+      },
+      [lastMove.to]: {
+        boxShadow: "inset 0 0 0 9999px rgba(250, 204, 21, 0.24)",
+      },
+    };
+  }, [moves]);
+
+  const commitMove = (move) => {
+    setMoves((currentMoves) => [...currentMoves, move]);
+    setRedoStack([]);
+  };
+
   const onDrop = (sourceSquare, targetSquare) => {
     try {
       const validationGame = new Chess(fen);
+
+      if (requiresPromotion(validationGame, sourceSquare, targetSquare)) {
+        const piece = validationGame.get(sourceSquare);
+
+        setPendingPromotion({
+          from: sourceSquare,
+          to: targetSquare,
+          color: piece.color,
+        });
+
+        return false;
+      }
+
       const move = validationGame.move({
         from: sourceSquare,
         to: targetSquare,
-        promotion: "q",
       });
 
       if (!move) {
         return false;
       }
 
-      setMoves((currentMoves) => [
-        ...currentMoves,
-        {
-          from: sourceSquare,
-          to: targetSquare,
-          promotion: move.promotion || undefined,
-        },
-      ]);
-      setRedoStack([]);
+      commitMove({
+        from: sourceSquare,
+        to: targetSquare,
+      });
 
       return true;
     } catch {
@@ -188,10 +247,36 @@ function App() {
     }
   };
 
+  const handlePromotion = (promotion) => {
+    if (!pendingPromotion) {
+      return;
+    }
+
+    try {
+      const validationGame = new Chess(fen);
+      const move = validationGame.move({
+        from: pendingPromotion.from,
+        to: pendingPromotion.to,
+        promotion,
+      });
+
+      if (move) {
+        commitMove({
+          from: pendingPromotion.from,
+          to: pendingPromotion.to,
+          promotion,
+        });
+      }
+    } finally {
+      setPendingPromotion(null);
+    }
+  };
+
   const handleNewGame = () => {
     setBaseFen(STARTING_FEN);
     setMoves([]);
     setRedoStack([]);
+    setPendingPromotion(null);
   };
 
   const handleUndo = () => {
@@ -203,6 +288,7 @@ function App() {
 
     setMoves((currentMoves) => currentMoves.slice(0, -1));
     setRedoStack((currentRedo) => [lastMove, ...currentRedo]);
+    setPendingPromotion(null);
   };
 
   const handleRedo = () => {
@@ -214,12 +300,31 @@ function App() {
 
     setMoves((currentMoves) => [...currentMoves, nextMove]);
     setRedoStack(remainingRedo);
+    setPendingPromotion(null);
   };
 
   const handleFlip = () => {
     setOrientation((current) =>
       current === "white" ? "black" : "white"
     );
+  };
+
+  const handleLoadFen = (nextFen) => {
+    try {
+      const loadedGame = new Chess(nextFen);
+
+      setBaseFen(loadedGame.fen());
+      setMoves([]);
+      setRedoStack([]);
+      setPendingPromotion(null);
+
+      return { ok: true };
+    } catch {
+      return {
+        ok: false,
+        error: "That FEN could not be loaded. Check all six FEN fields.",
+      };
+    }
   };
 
   const gameStatus = getGameStatus(game);
@@ -245,21 +350,31 @@ function App() {
       <div className="workspace">
         <section className="board-column" aria-label="Chess board">
           <div className="board-frame">
-            <Chessboard
-              id="analysis-board"
-              position={fen}
-              onPieceDrop={onDrop}
-              boardOrientation={orientation}
-              boardWidth={boardWidth}
-              arePiecesDraggable={!game.isGameOver()}
-              animationDuration={180}
-              customBoardStyle={{
-                borderRadius: "12px",
-                boxShadow: "0 24px 60px rgba(0, 0, 0, 0.28)",
-              }}
-              customDarkSquareStyle={{ backgroundColor: "#4b7399" }}
-              customLightSquareStyle={{ backgroundColor: "#e8edf3" }}
-            />
+            <div className="board-stage">
+              <EvaluationBar
+                evaluation={analysis.evaluation}
+                mate={analysis.mate}
+                orientation={orientation}
+              />
+
+              <Chessboard
+                id="analysis-board"
+                position={fen}
+                onPieceDrop={onDrop}
+                boardOrientation={orientation}
+                boardWidth={boardWidth}
+                arePiecesDraggable={!game.isGameOver()}
+                animationDuration={180}
+                customArrows={bestMoveArrow}
+                customSquareStyles={lastMoveStyles}
+                customBoardStyle={{
+                  borderRadius: "12px",
+                  boxShadow: "0 24px 60px rgba(0, 0, 0, 0.28)",
+                }}
+                customDarkSquareStyle={{ backgroundColor: "#4b7399" }}
+                customLightSquareStyle={{ backgroundColor: "#e8edf3" }}
+              />
+            </div>
           </div>
 
           <GameControls
@@ -269,6 +384,12 @@ function App() {
             onFlip={handleFlip}
             canUndo={moves.length > 0}
             canRedo={redoStack.length > 0}
+          />
+
+          <PositionTools
+            fen={fen}
+            pgn={pgn}
+            onLoadFen={handleLoadFen}
           />
         </section>
 
@@ -287,6 +408,12 @@ function App() {
         Analysis runs entirely in your browser. No chess position is sent to a
         server.
       </footer>
+
+      <PromotionDialog
+        pendingPromotion={pendingPromotion}
+        onChoose={handlePromotion}
+        onCancel={() => setPendingPromotion(null)}
+      />
     </main>
   );
 }
