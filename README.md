@@ -1,70 +1,63 @@
-# Getting Started with Create React App
+# Stockfish Analysis Board
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A browser-based chess analysis application built with React, Chess.js, react-chessboard, and Stockfish 16.1 running locally through a Web Worker and WebAssembly.
 
-## Available Scripts
+## Current functionality
 
-In the project directory, you can run:
+- legal chess moves validated by Chess.js
+- Stockfish analysis after each position change
+- non-blocking engine execution in a Web Worker
+- evaluation normalized from White's perspective
+- engine depth, best move, and principal variation
+- SAN move history
+- New Game, Undo, Redo, and Flip Board controls
+- check, checkmate, stalemate, and draw status
+- responsive analysis-board layout
 
-### `npm start`
+The Stockfish engine runs entirely in the browser. Positions are not sent to a backend.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Architecture
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+```text
+React UI
+  ├─ Chess.js
+  │    └─ game rules, FEN, SAN, game status
+  │
+  └─ useStockfish hook
+       └─ Web Worker
+            └─ Stockfish 16.1 WASM
+```
 
-### `npm test`
+The UI sends the current FEN to the engine hook. The hook coordinates UCI `stop` / `isready` / `go` commands so stale engine output does not overwrite a newer position.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Run locally
 
-### `npm run build`
+```bash
+npm install
+npm start
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Production build:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+npm run build
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Tests:
 
-### `npm run eject`
+```bash
+npm test -- --watchAll=false
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Roadmap
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+Phase 1 establishes reliable engine communication and core game controls.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Planned next:
+- evaluation bar
+- best-move arrow
+- promotion picker
+- FEN / PGN import and export
+- clickable move navigation
+- stronger test coverage
+- deployment and final portfolio documentation
