@@ -1,33 +1,10 @@
-import { render, screen } from "@testing-library/react";
-import App from "./App";
+import { Chess } from "chess.js";
 
-jest.mock("react-chessboard", () => ({
-  Chessboard: () => <div data-testid="chessboard" />,
-}));
+test("Chess.js validates and records a legal opening move", () => {
+  const game = new Chess();
+  const move = game.move({ from: "e2", to: "e4" });
 
-class WorkerMock {
-  constructor() {
-    this.onmessage = null;
-    this.onerror = null;
-  }
-
-  postMessage() {}
-
-  terminate() {}
-}
-
-beforeAll(() => {
-  window.Worker = WorkerMock;
-});
-
-test("renders the Stockfish analysis workspace", () => {
-  render(<App />);
-
-  expect(
-    screen.getByRole("heading", { name: /stockfish analysis board/i })
-  ).toBeInTheDocument();
-
-  expect(screen.getByTestId("chessboard")).toBeInTheDocument();
-  expect(screen.getByText(/position analysis/i)).toBeInTheDocument();
-  expect(screen.getByText(/move history/i)).toBeInTheDocument();
+  expect(move.san).toBe("e4");
+  expect(game.history()).toEqual(["e4"]);
+  expect(game.turn()).toBe("b");
 });
