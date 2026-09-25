@@ -10,107 +10,18 @@ import MoveHistory from "./components/MoveHistory";
 import PositionTools from "./components/PositionTools";
 import PromotionDialog from "./components/PromotionDialog";
 import { useStockfish } from "./hooks/useStockfish";
+import {
+  buildGame,
+  createTimeline,
+  formatPrincipalVariation,
+  formatUciMoveAsSan,
+  getGameStatus,
+  requiresPromotion,
+  splitTimeline,
+  uciToMove,
+} from "./utils/chess";
 
 const STARTING_FEN = new Chess().fen();
-
-function buildGame(baseFen, moves) {
-  const nextGame = new Chess(baseFen);
-
-  moves.forEach((move) => {
-    nextGame.move(move);
-  });
-
-  return nextGame;
-}
-
-function uciToMove(uciMove) {
-  if (!uciMove || uciMove.length < 4) {
-    return null;
-  }
-
-  return {
-    from: uciMove.slice(0, 2),
-    to: uciMove.slice(2, 4),
-    promotion: uciMove[4] || undefined,
-  };
-}
-
-function formatUciMoveAsSan(fen, uciMove) {
-  const move = uciToMove(uciMove);
-
-  if (!move) {
-    return "";
-  }
-
-  try {
-    const game = new Chess(fen);
-    return game.move(move)?.san || uciMove;
-  } catch {
-    return uciMove;
-  }
-}
-
-function formatPrincipalVariation(fen, pv) {
-  if (!pv || pv.length === 0) {
-    return [];
-  }
-
-  try {
-    const game = new Chess(fen);
-    const line = [];
-
-    for (const uciMove of pv.slice(0, 10)) {
-      const move = uciToMove(uciMove);
-
-      if (!move) {
-        break;
-      }
-
-      const playedMove = game.move(move);
-
-      if (!playedMove) {
-        break;
-      }
-
-      line.push(playedMove.san);
-    }
-
-    return line;
-  } catch {
-    return pv.slice(0, 10);
-  }
-}
-
-function getGameStatus(game) {
-  if (game.isCheckmate()) {
-    const winner = game.turn() === "w" ? "Black" : "White";
-    return `${winner} wins by checkmate`;
-  }
-
-  if (game.isStalemate()) {
-    return "Draw by stalemate";
-  }
-
-  if (game.isInsufficientMaterial()) {
-    return "Draw by insufficient material";
-  }
-
-  if (game.isThreefoldRepetition()) {
-    return "Draw by threefold repetition";
-  }
-
-  if (game.isDraw()) {
-    return "Draw";
-  }
-
-  const sideToMove = game.turn() === "w" ? "White" : "Black";
-
-  if (game.isCheck()) {
-    return `${sideToMove} to move — check`;
-  }
-
-  return `${sideToMove} to move`;
-}
 
 function initialBoardWidth() {
   if (typeof window === "undefined") {
@@ -118,21 +29,6 @@ function initialBoardWidth() {
   }
 
   return Math.max(220, Math.min(560, window.innerWidth - 90));
-}
-
-function requiresPromotion(game, sourceSquare, targetSquare) {
-  const piece = game.get(sourceSquare);
-
-  if (!piece || piece.type !== "p") {
-    return false;
-  }
-
-  const targetRank = targetSquare?.[1];
-
-  return (
-    (piece.color === "w" && targetRank === "8") ||
-    (piece.color === "b" && targetRank === "1")
-  );
 }
 
 function App() {
@@ -143,13 +39,24 @@ function App() {
   const [boardWidth, setBoardWidth] = useState(initialBoardWidth);
   const [pendingPromotion, setPendingPromotion] = useState(null);
 
+  const timeline = useMemo(
+    () => createTimeline(moves, redoStack),
+    [moves, redoStack]
+  );
+
   const game = useMemo(
     () => buildGame(baseFen, moves),
     [baseFen, moves]
   );
 
+  const fullGame = useMemo(
+    () => buildGame(baseFen, timeline),
+    [baseFen, timeline]
+  );
+
   const fen = game.fen();
-  const history = game.history();
+  const history = fullGame.history();
+  const currentPly = moves.length;
   const pgn = game.pgn();
 
   const { analysis, status, analyze } = useStockfish({
@@ -168,6 +75,57 @@ function App() {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const target = event.target;
+      const tagName = target?.tagName?.toLowerCase();
+
+      if (
+        tagName === "input" ||
+        tagName === "textarea" ||
+        tagName === "select" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
+
+      if (event.key === "ArrowLeft" && moves.length > 0) {
+        event.preventDefault();
+        const lastMove = moves[moves.length - 1];
+        setMoves((current) => current.slice(0, -1));
+        setRedoStack((current) => [lastMove, ...current]);
+        setPendingPromotion(null);
+      }
+
+      if (event.key === "ArrowRight" && redoStack.length > 0) {
+        event.preventDefault();
+        const [nextMove, ...remaining] = redoStack;
+        setMoves((current) => [...current, nextMove]);
+        setRedoStack(remaining);
+        setPendingPromotion(null);
+      }
+
+      if (event.key === "Home" && timeline.length > 0) {
+        event.preventDefault();
+        const split = splitTimeline(timeline, 0);
+        setMoves(split.moves);
+        setRedoStack(split.redoStack);
+        setPendingPromotion(null);
+      }
+
+      if (event.key === "End" && redoStack.length > 0) {
+        event.preventDefault();
+        const split = splitTimeline(timeline, timeline.length);
+        setMoves(split.moves);
+        setRedoStack(split.redoStack);
+        setPendingPromotion(null);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [moves, redoStack, timeline]);
 
   const bestMoveSan = useMemo(
     () => formatUciMoveAsSan(fen, analysis.bestMove),
@@ -303,6 +261,14 @@ function App() {
     setPendingPromotion(null);
   };
 
+  const handleNavigate = (ply) => {
+    const split = splitTimeline(timeline, ply);
+
+    setMoves(split.moves);
+    setRedoStack(split.redoStack);
+    setPendingPromotion(null);
+  };
+
   const handleFlip = () => {
     setOrientation((current) =>
       current === "white" ? "black" : "white"
@@ -336,8 +302,8 @@ function App() {
           <p className="eyebrow">React · Chess.js · Stockfish WASM</p>
           <h1>Stockfish Analysis Board</h1>
           <p className="app-description">
-            Play legal moves on the board and analyze each position locally
-            with Stockfish running in a Web Worker.
+            Play legal moves, inspect earlier positions, and analyze each
+            position locally with Stockfish running in a Web Worker.
           </p>
         </div>
 
@@ -400,13 +366,22 @@ function App() {
             bestMoveSan={bestMoveSan}
             principalVariation={principalVariation}
           />
-          <MoveHistory history={history} />
+          <MoveHistory
+            history={history}
+            currentPly={currentPly}
+            onNavigate={handleNavigate}
+          />
         </aside>
       </div>
 
       <footer className="app-footer">
-        Analysis runs entirely in your browser. No chess position is sent to a
-        server.
+        <span>
+          Analysis runs entirely in your browser. No chess position is sent to
+          a server.
+        </span>
+        <span className="keyboard-hint">
+          Keyboard: ← previous · → next · Home start · End latest
+        </span>
       </footer>
 
       <PromotionDialog
