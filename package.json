@@ -1,6 +1,6 @@
 {
   "name": "stockfish-analysis-board",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "chess.js": "^1.0.0",
@@ -37,5 +37,6 @@
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.6.3"
-  }
+  },
+  "homepage": "https://lucaapaglia.github.io/chessapp"
 }

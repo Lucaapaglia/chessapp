@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="760" viewBox="0 0 1500 760">
+<style>
+  .bg{fill:#07101e}.card{fill:#0f172a;stroke:#334155;stroke-width:2}.blue{fill:#0f2744;stroke:#3b82f6}.green{fill:#0f2d22;stroke:#22c55e}.purple{fill:#221738;stroke:#8b5cf6}
+  .title{font:700 40px Arial,sans-serif;fill:#f8fafc}.sub{font:20px Arial,sans-serif;fill:#94a3b8}.h{font:700 26px Arial,sans-serif;fill:#f8fafc}.t{font:18px Arial,sans-serif;fill:#cbd5e1}.small{font:16px Arial,sans-serif;fill:#94a3b8}.mono{font:17px Consolas,monospace;fill:#bfdbfe}
+</style>
+<rect width="1500" height="760" class="bg"/>
+<text x="70" y="62" class="title">Stockfish Analysis Board — Browser Architecture</text>
+<text x="70" y="98" class="sub">React UI + Chess.js + Web Worker + Stockfish 16.1 WebAssembly</text>
+
+<rect x="70" y="155" width="420" height="430" rx="18" class="card blue"/>
+<text x="100" y="202" class="h">React interface</text>
+<text x="105" y="250" class="t">• interactive chessboard</text>
+<text x="105" y="286" class="t">• evaluation bar + best-move arrow</text>
+<text x="105" y="322" class="t">• move history and timeline navigation</text>
+<text x="105" y="358" class="t">• FEN / PGN tools</text>
+<text x="105" y="394" class="t">• promotion selector</text>
+<text x="105" y="430" class="t">• keyboard navigation</text>
+<text x="105" y="492" class="small">State is rebuilt from:</text>
+<text x="105" y="525" class="mono">base FEN + move timeline</text>
+
+<rect x="550" y="155" width="400" height="430" rx="18" class="card green"/>
+<text x="580" y="202" class="h">Chess.js</text>
+<text x="585" y="250" class="t">• legal move validation</text>
+<text x="585" y="286" class="t">• FEN and PGN generation</text>
+<text x="585" y="322" class="t">• SAN notation</text>
+<text x="585" y="358" class="t">• check / mate / draw detection</text>
+<text x="585" y="394" class="t">• historical position reconstruction</text>
+<text x="585" y="468" class="small">Current position:</text>
+<text x="585" y="501" class="mono">game.fen()</text>
+<text x="585" y="536" class="small">Engine input is always the active FEN.</text>
+
+<rect x="1010" y="155" width="420" height="430" rx="18" class="card purple"/>
+<text x="1040" y="202" class="h">Stockfish engine worker</text>
+<text x="1045" y="250" class="t">• dedicated Web Worker</text>
+<text x="1045" y="286" class="t">• Stockfish 16.1 WASM</text>
+<text x="1045" y="322" class="t">• UCI stop / isready / go coordination</text>
+<text x="1045" y="358" class="t">• depth + centipawn / mate score</text>
+<text x="1045" y="394" class="t">• best move + principal variation</text>
+<text x="1045" y="468" class="small">Runs off the main UI thread.</text>
+<text x="1045" y="501" class="small">No chess position is sent to a server.</text>
+
+<line x1="490" y1="370" x2="550" y2="370" stroke="#60a5fa" stroke-width="5"/>
+<polygon points="535,358 550,370 535,382" fill="#60a5fa"/>
+<line x1="950" y1="370" x2="1010" y2="370" stroke="#a78bfa" stroke-width="5"/>
+<polygon points="995,358 1010,370 995,382" fill="#a78bfa"/>
+
+<rect x="280" y="635" width="940" height="66" rx="16" fill="#0b1220" stroke="#334155"/>
+<text x="330" y="675" class="t">Position change → FEN → worker analysis → parsed evaluation / PV → React render</text>
+</svg>
