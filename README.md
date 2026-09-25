@@ -6,6 +6,8 @@ A browser-based chess analysis application built with React, Chess.js, react-che
 
 **Live demo:** https://lucaapaglia.github.io/chessapp/
 
+![Stockfish Analysis Board](docs/screenshots/stockfish-analysis-board.webp)
+
 ## Why this project
 
 The goal is not to reproduce a full chess platform. The project focuses on the technically interesting parts of a local analysis tool:
